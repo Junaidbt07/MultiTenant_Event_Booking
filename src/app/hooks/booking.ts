@@ -1,4 +1,3 @@
-// src/app/hooks/booking.ts
 import { CollectionBeforeChangeHook, CollectionAfterChangeHook } from 'payload';
 import { Event, User, Booking } from '@/payload-types';
 
@@ -224,52 +223,40 @@ export const handleBookingStatusChange: CollectionAfterChangeHook = async ({ req
   if (operation === 'create') {
     console.log(`New booking created: ${doc.id} with status: ${doc.status}`);
     
-    // Use setTimeout to ensure booking is fully committed to DB first
-    // This prevents race conditions where we try to reference a booking that's not yet saved
-    setTimeout(async () => {
-      await createBookingLog('create_request', 'User requested a booking.');
-
-      if (doc.status === 'confirmed') {
-        await createNotification(userId, 'booking_confirmed', 'Booking Confirmed', 'Your booking has been confirmed as space was available.');
-        await createBookingLog('auto_confirm', 'Automatically confirmed.');
-      } else if (doc.status === 'waitlisted') {
-        await createNotification(userId, 'waitlisted', 'Added to Waitlist', 'The event is full; you\'ve been added to the waitlist.');
-        await createBookingLog('auto_waitlist', 'Automatically waitlisted.');
-      }
-    }, 300);
+    await createBookingLog('create_request', 'User requested a booking.');
+    if (doc.status === 'confirmed') {
+      await createNotification(userId, 'booking_confirmed', 'Booking Confirmed', 'Your booking has been confirmed as space was available.');
+      await createBookingLog('auto_confirm', 'Automatically confirmed.');
+    } else if (doc.status === 'waitlisted') {
+      await createNotification(userId, 'waitlisted', 'Added to Waitlist', 'The event is full; you\'ve been added to the waitlist.');
+      await createBookingLog('auto_waitlist', 'Automatically waitlisted.');
+    }
   }
 
   // Handle booking status changes (confirmed → canceled, waitlisted → confirmed, etc.)
   if (operation === 'update' && doc.status !== previousDoc?.status) {
     console.log(`Booking status changed: ${previousDoc?.status} → ${doc.status}`);
     
-    // Again using setTimeout to ensure proper sequencing of database operations
-    setTimeout(async () => {
-      if (doc.status === 'confirmed' && previousDoc?.status === 'waitlisted') {
-        // Check if this was an automatic promotion vs manual confirmation
-        if (context?.isPromotion) {
-          await createNotification(userId, 'waitlist_promoted', 'Promoted from Waitlist', 'A spot opened up; your booking is now confirmed.');
-          await createBookingLog('promote_from_waitlist', 'Promoted from waitlist due to cancellation.');
-        } else {
-          await createNotification(userId, 'booking_confirmed', 'Booking Confirmed', 'Your booking status has been updated to confirmed.');
-          await createBookingLog('auto_confirm', 'Status updated to confirmed.');
-        }
-      } else if (doc.status === 'canceled' && (previousDoc?.status === 'confirmed' || previousDoc?.status === 'waitlisted')) {
-        await createNotification(userId, 'booking_canceled', 'Booking Canceled', 'Your booking has been canceled.');
-        await createBookingLog('cancel_confirmed', `${previousDoc?.status || 'Unknown'} booking canceled.`);
-        
-        // If a confirmed booking was canceled, try to promote someone from waitlist
-        // This is where the magic happens - automatic waitlist management
-        if (previousDoc?.status === 'confirmed') {
-          console.log(`Confirmed booking canceled, checking for waitlist promotion...`);
-          
-          // Use a longer timeout to ensure the cancellation is fully processed
-          setTimeout(() => {
-            promoteFromWaitlist();
-          }, 500);
-        }
+    if (doc.status === 'confirmed' && previousDoc?.status === 'waitlisted') {
+      // Check if this was an automatic promotion vs manual confirmation
+      if (context?.isPromotion) {
+        await createNotification(userId, 'waitlist_promoted', 'Promoted from Waitlist', 'A spot opened up; your booking is now confirmed.');
+        await createBookingLog('promote_from_waitlist', 'Promoted from waitlist due to cancellation.');
+      } else {
+        await createNotification(userId, 'booking_confirmed', 'Booking Confirmed', 'Your booking status has been updated to confirmed.');
+        await createBookingLog('auto_confirm', 'Status updated to confirmed.');
       }
-    }, 300);
+    } else if (doc.status === 'canceled' && (previousDoc?.status === 'confirmed' || previousDoc?.status === 'waitlisted')) {
+      await createNotification(userId, 'booking_canceled', 'Booking Canceled', 'Your booking has been canceled.');
+      await createBookingLog('cancel_confirmed', `${previousDoc?.status || 'Unknown'} booking canceled.`);
+      
+      // If a confirmed booking was canceled, try to promote someone from waitlist
+      // This is where the magic happens - automatic waitlist management
+      if (previousDoc?.status === 'confirmed') {
+        console.log(`Confirmed booking canceled, checking for waitlist promotion...`);
+        await promoteFromWaitlist();
+      }
+    }
   }
 
   return doc;
