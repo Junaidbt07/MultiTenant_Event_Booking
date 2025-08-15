@@ -1,8 +1,8 @@
 # Multi-Tenant Event Booking System
 
-🚀 **Live Demo**: [https://multi-tenant-event-booking-livid.vercel.app/](https://multi-tenant-event-booking-livid.vercel.app/)
-- **Admin Panel**: [https://multi-tenant-event-booking-livid.vercel.app/admin](https://multi-tenant-event-booking-livid.vercel.app/admin/login)
-- **Dashboard**: [https://multi-tenant-event-booking-livid.vercel.app/dashboard](https://multi-tenant-event-booking-livid.vercel.app/dashboard)
+🚀 **Live Demo**: [https://multitenant-event-booking.onrender.com/](https://multitenant-event-booking.onrender.com/)
+- **Admin Panel**: [https://multitenant-event-booking.onrender.com/admin/login](https://multitenant-event-booking.onrender.com/admin/login)
+- **Dashboard**: [https://multitenant-event-booking.onrender.com/dashboard](https://multitenant-event-booking.onrender.com/dashboard)
 
 ## Overview
 
@@ -31,7 +31,6 @@ The backend functions through Payload's access control and hooks, ensuring multi
   ```
   PAYLOAD_SECRET=your-secret-key
   DATABASE_URI=postgres://username:password@localhost:5432/database_name
-  NEXT_PUBLIC_SERVER_URL=http://localhost:3000
   ```
 
 ## Setup Instructions
@@ -182,7 +181,7 @@ After running `npm run seed`, use these credentials to log in via `/admin`:
 
 ## Live Demo Access
 
-🌐 **Try it live**: [https://multi-tenant-event-booking-livid.vercel.app/admin](https://multi-tenant-event-booking-livid.vercel.app/admin)
+🌐 **Try it live**: [https://multitenant-event-booking.onrender.com/admin](https://multitenant-event-booking.onrender.com/admin)
 
 Use any of the demo credentials above to explore the system. The live demo includes:
 - Pre-seeded data for both tenants
@@ -193,25 +192,25 @@ Use any of the demo credentials above to explore the system. The live demo inclu
 
 ## Deployment Guide
 
-This project is deployed on Vercel and is production-ready.
+This project is deployed on **Render** and is production-ready.
 
 ### Deploy Your Own:
 
 1. **Fork this repository** to your GitHub account
-2. **Create a Vercel account** and import the repository
-3. **Set up environment variables** in Vercel dashboard:
+2. **Create a Render account** and import the repository
+3. **Set up environment variables** in the Render dashboard:
    ```
    PAYLOAD_SECRET=your-secret-key-here
    DATABASE_URI=your-postgresql-connection-string
    ```
-4. **Connect to a PostgreSQL provider** (Neon, Vercel Postgres, or Supabase)
-5. **Deploy**: Vercel handles build and deployment automatically
+4. **Connect to a PostgreSQL provider** (Neon, Supabase, or Render PostgreSQL)
+5. **Deploy**: Render handles build and deployment automatically
 6. **Run the seed script** (optional) to populate sample data
 
 ### Environment Setup:
 - Uses PostgreSQL with `@payloadcms/db-postgres`
-- Deployed on Vercel with Next.js runtime
-- Environment variables managed through Vercel dashboard
+- Deployed on Render with Node.js runtime
+- Environment variables managed through Render dashboard
 - Automatic builds on git push
 
-The live demo runs on Vercel's free tier and demonstrates full production capabilities including database persistence, real-time updates, and secure multi-tenant access control.
+The live demo runs on **Render** and demonstrates full production capabilities including database persistence, real-time updates, and secure multi-tenant access control.
