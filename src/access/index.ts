@@ -10,17 +10,6 @@ export const isOrganizerOrAdmin: Access = ({ req: { user } }) => {
   return user?.role === "organizer" || user?.role === "admin"
 }
 
-// Allow users to access their own data (for users collection)
-export const canAccessSelf: Access = ({ req: { user } }) => {
-  if (!user) return false
-  const tenantId = typeof user.tenant === "object" ? user.tenant.id : user.tenant
-  
-  if (user.role === "admin" || user.role === "organizer") {
-    return { tenant: { equals: tenantId } } as AccessResult
-  }
-  // Attendees can only access their own records
-  return { id: { equals: user.id } }
-}
 
 // SPECIFIC ACCESS FUNCTION FOR NOTIFICATIONS
 export const canAccessOwnNotifications: Access = ({ req: { user }}) => {

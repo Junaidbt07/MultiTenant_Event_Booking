@@ -56,7 +56,6 @@ export const Bookings: CollectionConfig = {
     beforeChange: [checkEventCapacity],
     afterChange: [handleBookingStatusChange],
     afterUpdate: [
-      // CRITICAL FIX: Waitlist promotion after cancellation
       async ({ req, doc, previousDoc }: any) => {
         const { payload } = req;
         
@@ -128,7 +127,7 @@ export const Bookings: CollectionConfig = {
       defaultValue: 'waitlisted',
       required: true,
       admin: {
-        // Attendees can only cancel, not change to other statuses
+        // Attendees cannot change to other statuses
         condition: (data, siblingData, { user }) => {
           if (user?.role === 'attendee') {
             return false; // Hide status field for attendees in create/edit

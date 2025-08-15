@@ -21,7 +21,6 @@ const seed = async () => {
       config,
     });
 
-
     // Clear existing data
     const collections = [
       'booking-logs',
@@ -34,7 +33,7 @@ const seed = async () => {
     for (const col of collections) {
       await payload.delete({ collection: col as CollectionSlug, where: {} });
     }
-    console.log('Cleared existing data');
+    console.log('✅ Cleared existing data');
 
     // Create Tenants
     const tenant1 = await payload.create({
@@ -45,7 +44,7 @@ const seed = async () => {
       collection: 'tenants',
       data: { name: 'EventMax Pro' },
     });
-    console.log(' Created tenants:', tenant1.name, 'and', tenant2.name);
+    console.log('✅ Created tenants:', tenant1.name, 'and', tenant2.name);
 
     // Helper to create users for a tenant
     const createUsers = async (
@@ -91,7 +90,7 @@ const seed = async () => {
       return { admin, organizer, attendees };
     };
 
-    // Create Users
+    // Create Users for Tenant 1
     const tenant1Users = await createUsers(
       tenant1.id,
       {
@@ -103,6 +102,7 @@ const seed = async () => {
       ['John Doe', 'Sarah Wilson', 'Mike Chen'],
     );
 
+    // Create Users for Tenant 2
     const tenant2Users = await createUsers(
       tenant2.id,
       {
@@ -114,7 +114,7 @@ const seed = async () => {
       ['James Smith', 'Maria Garcia', 'Robert Taylor'],
     );
 
-    console.log('Created users for both tenants');
+    console.log('✅ Created users for both tenants');
 
     // Helper to create events
     const createEvents = async (tenantId: Tenant | number, organizerId: User) => {
@@ -126,7 +126,7 @@ const seed = async () => {
       const event1 = await payload.create({
         collection: 'events',
         data: {
-          title: 'Event 1',
+          title: `Tech Conference 2024`,
           description: {
             root: {
               type: 'root',
@@ -134,7 +134,7 @@ const seed = async () => {
                 {
                   type: 'paragraph',
                   children: [
-                    { type: 'text', text: 'Some event details...', version: 1 },
+                    { type: 'text', text: 'Join us for an exciting tech conference with industry leaders and networking opportunities.', version: 1 },
                   ],
                   version: 1,
                 },
@@ -146,7 +146,7 @@ const seed = async () => {
             },
           },
           date: futureDate1.toISOString(),
-          capacity: 1,
+          capacity: 2, // Small capacity to test waitlist
           organizer: organizerId,
           tenant: tenantId,
         },
@@ -155,7 +155,7 @@ const seed = async () => {
       const event2 = await payload.create({
         collection: 'events',
         data: {
-          title: 'Event 2',
+          title: `Workshop Series`,
           description: {
             root: {
               type: 'root',
@@ -163,7 +163,7 @@ const seed = async () => {
                 {
                   type: 'paragraph',
                   children: [
-                    { type: 'text', text: 'Some event details...', version: 1 },
+                    { type: 'text', text: 'Hands-on workshop series covering the latest technologies and best practices.', version: 1 },
                   ],
                   version: 1,
                 },
@@ -175,7 +175,7 @@ const seed = async () => {
             },
           },
           date: futureDate2.toISOString(),
-          capacity: 2,
+          capacity: 5, // Larger capacity
           organizer: organizerId,
           tenant: tenantId,
         },
@@ -184,46 +184,11 @@ const seed = async () => {
       return [event1, event2];
     };
 
-    const tenant1Events = await createEvents(
-      tenant1.id,
-      tenant1Users.organizer,
-    );
-    const tenant2Events = await createEvents(
-      tenant2.id,
-      tenant2Users.organizer,
-    );
+    // Create Events for both tenants
+    const tenant1Events = await createEvents(tenant1.id, tenant1Users.organizer);
+    const tenant2Events = await createEvents(tenant2.id, tenant2Users.organizer);
 
-    console.log('Created events for both tenants');
-
-    // Booking simulations
-    console.log('Starting booking simulations...');
-
-    const createBooking = async (event: any, user: any, tenantId: any) => {
-      return await payload.create({
-        collection: 'bookings',
-        data: { event: event.id, user: user.id, tenant: tenantId },
-      });
-    };
-
-    // Tenant 1 Event 1 bookings
-    for (let i = 0; i < tenant1Users.attendees.length; i++) {
-      await createBooking(tenant1Events[0], tenant1Users.attendees[i], tenant1.id);
-    }
-
-    // Tenant 1 Event 2 partial bookings
-    for (let i = 0; i < 2; i++) {
-      await createBooking(tenant1Events[1], tenant1Users.attendees[i], tenant1.id);
-    }
-
-    // Tenant 2 Event 1 bookings
-    for (let i = 0; i < tenant2Users.attendees.length; i++) {
-      await createBooking(tenant2Events[0], tenant2Users.attendees[i], tenant2.id);
-    }
-
-    // Tenant 2 Event 2 single booking
-    await createBooking(tenant2Events[1], tenant2Users.attendees[0], tenant2.id);
-
-    console.log('Created booking scenarios');
+    console.log('✅ Created events for both tenants');
 
     // Function to log all users grouped by role
     const logUsersByTenant = async (tenantId: any, tenantName: string) => {
@@ -233,7 +198,7 @@ const seed = async () => {
         limit: 100,
       });
 
-      console.log(` Users for tenant: ${tenantName}`);
+      console.log(`\n📋 Users for tenant: ${tenantName}`);
       const roles: Record<string, any[]> = {};
 
       allUsers.docs.forEach((user) => {
@@ -242,9 +207,9 @@ const seed = async () => {
       });
 
       for (const role in roles) {
-        console.log(`\nRole: ${role}`);
+        console.log(`\n  👤 Role: ${role}`);
         roles[role].forEach((u) =>
-          console.log(`- ${u.name} (${u.email})`),
+          console.log(`     - ${u.name} (${u.email})`),
         );
       }
     };
@@ -254,8 +219,23 @@ const seed = async () => {
     await logUsersByTenant(tenant2.id, tenant2.name);
 
     console.log('Seed process completed successfully!');
+    console.log('Demo Credentials:');
+    console.log('===============================');
+    console.log('Tenant 1 (TechCorp Solutions):');
+    console.log('  Admin: admin@techcorp.com / password123');
+    console.log('  Organizer: alice.organizer@techcorp.com / password123');
+    console.log('  Attendees: john.doe@techcorp.com / password123');
+    console.log('             sarah.wilson@techcorp.com / password123');
+    console.log('             mike.chen@techcorp.com / password123');
+    console.log('\nTenant 2 (EventMax Pro):');
+    console.log('  Admin: admin@eventmax.com / password123');
+    console.log('  Organizer: david.organizer@eventmax.com / password123');
+    console.log('  Attendees: james.smith@eventmax.com / password123');
+    console.log('             maria.garcia@eventmax.com / password123');
+    console.log('             robert.taylor@eventmax.com / password123');
+    
   } catch (error) {
-    console.error('Seed process failed:', error);
+    console.error('❌ Seed process failed:', error);
   }
 };
 
