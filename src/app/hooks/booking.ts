@@ -85,10 +85,10 @@ export const handleBookingStatusChange: CollectionAfterChangeHook = async ({ req
         },
         context: { skipHooks: true }, // Prevent infinite loops
       });
-      console.log(`✅ Notification created: ${type} for user ${userId}`);
+      console.log(`Notification created: ${type} for user ${userId}`);
     } catch (error) {
       payload.logger.error(`Failed to create notification: ${error}`);
-      console.error(`❌ Notification error:`, error);
+      console.error(`Notification error:`, error);
     }
   };
 
@@ -106,7 +106,7 @@ export const handleBookingStatusChange: CollectionAfterChangeHook = async ({ req
         },
         context: { skipHooks: true }, // Prevent infinite loops
       });
-      console.log(`✅ Booking log created: ${action}`);
+      console.log(`Booking log created: ${action}`);
     } catch (error) {
       payload.logger.error(`Failed to create booking log: ${error}`);
     }
@@ -114,7 +114,7 @@ export const handleBookingStatusChange: CollectionAfterChangeHook = async ({ req
 
   const promoteFromWaitlist = async () => {
     try {
-      console.log(`🔄 Starting waitlist promotion for event ${doc.event}`);
+      console.log(`Starting waitlist promotion for event ${doc.event}`);
       
       // Get the event to check capacity
       const eventDoc = await payload.findByID({
@@ -123,7 +123,7 @@ export const handleBookingStatusChange: CollectionAfterChangeHook = async ({ req
       }) as Event;
 
       if (!eventDoc) {
-        console.log('❌ Event not found for promotion');
+        console.log(' Event not found for promotion');
         return;
       }
 
@@ -139,7 +139,7 @@ export const handleBookingStatusChange: CollectionAfterChangeHook = async ({ req
         },
       });
 
-      console.log(`📊 Current confirmed bookings: ${confirmedBookings.docs.length}/${eventDoc.capacity}`);
+      console.log(` Current confirmed bookings: ${confirmedBookings.docs.length}/${eventDoc.capacity}`);
 
       // If there's space, promote the first waitlisted booking
       if (confirmedBookings.docs.length < eventDoc.capacity) {
@@ -156,13 +156,13 @@ export const handleBookingStatusChange: CollectionAfterChangeHook = async ({ req
           limit: 1,
         });
 
-        console.log(`📋 Waitlisted bookings found: ${waitlistedBookings.docs.length}`);
+        console.log(` Waitlisted bookings found: ${waitlistedBookings.docs.length}`);
 
         if (waitlistedBookings.docs.length > 0) {
           const bookingToPromote = waitlistedBookings.docs[0] as Booking;
           const promotedUserId: any = typeof bookingToPromote.user === 'object' ? bookingToPromote.user.id : bookingToPromote.user;
           
-          console.log(`🎉 Promoting booking ${bookingToPromote.id} for user ${promotedUserId}`);
+          console.log(` Promoting booking ${bookingToPromote.id} for user ${promotedUserId}`);
           
           // Update the booking status to confirmed
           await payload.update({
@@ -184,12 +184,12 @@ export const handleBookingStatusChange: CollectionAfterChangeHook = async ({ req
           
           await createBookingLog('promote_from_waitlist', 'Promoted from waitlist due to cancellation.');
           
-          console.log(`✅ Successfully promoted booking ${bookingToPromote.id} from waitlist`);
+          console.log(` Successfully promoted booking ${bookingToPromote.id} from waitlist`);
         } else {
-          console.log(`ℹ️ No waitlisted bookings to promote`);
+          console.log(` No waitlisted bookings to promote`);
         }
       } else {
-        console.log(`ℹ️ Event is still at full capacity, no promotion needed`);
+        console.log(` Event is still at full capacity, no promotion needed`);
       }
     } catch (error) {
       payload.logger.error(`Error promoting from waitlist: ${error}`);
@@ -199,7 +199,7 @@ export const handleBookingStatusChange: CollectionAfterChangeHook = async ({ req
 
   if (operation === 'create') {
     // Handle new booking creation
-    console.log(`📝 New booking created: ${doc.id} with status: ${doc.status}`);
+    console.log(`New booking created: ${doc.id} with status: ${doc.status}`);
     
     // Use setTimeout to ensure booking is fully committed to DB first
     setTimeout(async () => {
@@ -216,7 +216,7 @@ export const handleBookingStatusChange: CollectionAfterChangeHook = async ({ req
   }
 
   if (operation === 'update' && doc.status !== previousDoc?.status) {
-    console.log(`🔄 Booking status changed: ${previousDoc?.status} → ${doc.status}`);
+    console.log(`Booking status changed: ${previousDoc?.status} → ${doc.status}`);
     
     setTimeout(async () => {
       if (doc.status === 'confirmed' && previousDoc?.status === 'waitlisted') {
@@ -233,7 +233,7 @@ export const handleBookingStatusChange: CollectionAfterChangeHook = async ({ req
         
         // If a confirmed booking was canceled, try to promote someone from waitlist
         if (previousDoc?.status === 'confirmed') {
-          console.log(`🔄 Confirmed booking canceled, checking for waitlist promotion...`);
+          console.log(`Confirmed booking canceled, checking for waitlist promotion...`);
           
           // Use a longer timeout to ensure the cancellation is fully processed
           setTimeout(() => {

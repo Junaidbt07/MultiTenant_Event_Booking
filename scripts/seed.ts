@@ -21,7 +21,6 @@ const seed = async () => {
       config,
     });
 
-    console.log('🌱 Starting seed process...');
 
     // Clear existing data
     const collections = [
@@ -35,7 +34,7 @@ const seed = async () => {
     for (const col of collections) {
       await payload.delete({ collection: col as CollectionSlug, where: {} });
     }
-    console.log('🧹 Cleared existing data');
+    console.log('Cleared existing data');
 
     // Create Tenants
     const tenant1 = await payload.create({
@@ -46,7 +45,7 @@ const seed = async () => {
       collection: 'tenants',
       data: { name: 'EventMax Pro' },
     });
-    console.log('🏢 Created tenants:', tenant1.name, 'and', tenant2.name);
+    console.log(' Created tenants:', tenant1.name, 'and', tenant2.name);
 
     // Helper to create users for a tenant
     const createUsers = async (
@@ -115,7 +114,7 @@ const seed = async () => {
       ['James Smith', 'Maria Garcia', 'Robert Taylor'],
     );
 
-    console.log('👥 Created users for both tenants');
+    console.log('Created users for both tenants');
 
     // Helper to create events
     const createEvents = async (tenantId: Tenant | number, organizerId: User) => {
@@ -194,10 +193,10 @@ const seed = async () => {
       tenant2Users.organizer,
     );
 
-    console.log('📅 Created events for both tenants');
+    console.log('Created events for both tenants');
 
     // Booking simulations
-    console.log('🎫 Starting booking simulations...');
+    console.log('Starting booking simulations...');
 
     const createBooking = async (event: any, user: any, tenantId: any) => {
       return await payload.create({
@@ -224,7 +223,7 @@ const seed = async () => {
     // Tenant 2 Event 2 single booking
     await createBooking(tenant2Events[1], tenant2Users.attendees[0], tenant2.id);
 
-    console.log('🎫 Created booking scenarios');
+    console.log('Created booking scenarios');
 
     // Function to log all users grouped by role
     const logUsersByTenant = async (tenantId: any, tenantName: string) => {
@@ -234,7 +233,7 @@ const seed = async () => {
         limit: 100,
       });
 
-      console.log(`\n📝 Users for tenant: ${tenantName}`);
+      console.log(` Users for tenant: ${tenantName}`);
       const roles: Record<string, any[]> = {};
 
       allUsers.docs.forEach((user) => {
@@ -254,9 +253,9 @@ const seed = async () => {
     await logUsersByTenant(tenant1.id, tenant1.name);
     await logUsersByTenant(tenant2.id, tenant2.name);
 
-    console.log('\n🌱 Seed process completed successfully!');
+    console.log('Seed process completed successfully!');
   } catch (error) {
-    console.error('❌ Seed process failed:', error);
+    console.error('Seed process failed:', error);
   }
 };
 
