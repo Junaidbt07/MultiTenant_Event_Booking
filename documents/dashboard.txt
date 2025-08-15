@@ -1,0 +1,43 @@
+API Documentation: GET /api/dashboard/organizer
+
+Description:
+Retrieves aggregated data for the organizer dashboard, including upcoming events and summary analytics, filtered by the organizer's tenant.
+
+Request:
+- Method: GET
+- URL: /api/dashboard/organizer
+- Headers: Authorization (via Payload auth headers)
+- Required Permissions: Organizer role
+
+Response:
+- Success (200):
+  {
+    "upcomingEvents": [
+      {
+        "id": "string",
+        "title": "string",
+        "date": "string",
+        "capacity": number,
+        "confirmedCount": number,
+        "waitlistedCount": number,
+        "canceledCount": number,
+        "percentageFilled": number
+      }
+    ],
+    "summaryAnalytics": {
+      "totalEvents": number,
+      "totalConfirmedBookings": number,
+      "totalWaitlistedBookings": number,
+      "totalCanceledBookings": number
+    }
+  }
+- Error (401): Unauthorized
+  { "error": "Unauthorized" }
+- Error (403): Access denied
+  { "error": "Access denied. Only organizers can access this dashboard." }
+- Error (500): Server error
+  { "error": "Failed to fetch dashboard data" }
+
+Notes:
+- Filters events by the organizer's ID and tenant.
+- Calculates percentage filled based on confirmed bookings relative to capacity.

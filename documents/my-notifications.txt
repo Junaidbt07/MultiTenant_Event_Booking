@@ -1,0 +1,34 @@
+API Documentation: GET /api/my-notifications
+
+Description:
+Retrieves unread notifications for the authenticated user, filtered by their tenant.
+
+Request:
+- Method: GET
+- URL: /api/my-notifications
+- Headers: Authorization (via Payload auth headers)
+- Required Permissions: Any authenticated user
+
+Response:
+- Success (200):
+  [
+    {
+      "id": "string",
+      "type": "booking_confirmed" | "waitlisted" | "booking_canceled" | "waitlist_promoted",
+      "title": "string",
+      "message": "string",
+      "user": "string",
+      "booking": "string",
+      "tenant": "string",
+      "createdAt": "string",
+      "read": boolean
+    }
+  ]
+- Error (401): Unauthorized
+  { "error": "Unauthorized" }
+- Error (500): Server error
+  { "error": "Failed to fetch notifications" }
+
+Notes:
+- Returns notifications sorted by creation date in descending order.
+- Filters for unread notifications only.

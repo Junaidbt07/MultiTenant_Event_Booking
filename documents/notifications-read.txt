@@ -1,0 +1,41 @@
+API Documentation: POST /api/notifications/:id/read
+
+Description:
+Marks a specific notification as read for the authenticated user.
+
+Request:
+- Method: POST
+- URL: /api/notifications/:id/read (where :id is the notification ID)
+- Headers: Authorization (via Payload auth headers)
+- Body: Empty or { "read": true } (optional confirmation)
+- Required Permissions: Any authenticated user (must own the notification)
+
+Response:
+- Success (200):
+  {
+    "notification": {
+      "id": "string",
+      "type": "booking_confirmed" | "waitlisted" | "booking_canceled" | "waitlist_promoted",
+      "title": "string",
+      "message": "string",
+      "user": "string",
+      "booking": "string",
+      "tenant": "string",
+      "createdAt": "string",
+      "read": true
+    }
+  }
+- Error (400): Missing notification ID
+  { "error": "Notification ID is required" }
+- Error (401): Unauthorized
+  { "error": "Unauthorized" }
+- Error (403): Unauthorized to update
+  { "error": "You can only mark your own notifications as read" }
+- Error (404): Notification not found
+  { "error": "Notification not found" }
+- Error (500): Server error
+  { "error": "Failed to mark notification as read" }
+
+Notes:
+- Verifies the notification belongs to the authenticated user before updating.
+- Updates the 'read' field to true and returns the updated notification.

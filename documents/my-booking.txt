@@ -1,0 +1,31 @@
+API Documentation: GET /api/my-bookings
+
+Description:
+Fetches all bookings for the authenticated user, filtered by their tenant.
+
+Request:
+- Method: GET
+- URL: /api/my-bookings
+- Headers: Authorization (via Payload auth headers)
+- Required Permissions: Any authenticated user
+
+Response:
+- Success (200):
+  [
+    {
+      "id": "string",
+      "status": "confirmed" | "waitlisted" | "canceled",
+      "event": "string",
+      "user": "string",
+      "tenant": "string",
+      "createdAt": "string"
+    }
+  ]
+- Error (401): Unauthorized
+  { "error": "Unauthorized" }
+- Error (500): Server error
+  { "error": "Failed to fetch bookings" }
+
+Notes:
+- Returns bookings sorted by creation date in descending order.
+- Includes depth for related data like event details.

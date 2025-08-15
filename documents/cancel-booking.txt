@@ -1,0 +1,40 @@
+API Documentation: POST /api/cancel-booking
+
+Description:
+Cancels an existing booking, triggering a waitlist promotion if the canceled booking was confirmed and capacity allows. Logs the action and sends a notification.
+
+Request:
+- Method: POST
+- URL: /api/cancel-booking
+- Headers: Authorization (via Payload auth headers)
+- Body:
+  {
+    "bookingId": "string" // ID of the booking to cancel
+  }
+- Required Permissions: Attendee (only for own bookings) or higher roles
+
+Response:
+- Success (200):
+  {
+    "booking": {
+      "id": "string",
+      "status": "canceled",
+      "event": "string",
+      "user": "string",
+      "tenant": "string"
+    }
+  }
+- Error (400): Missing bookingId
+  { "error": "bookingId is required" }
+- Error (401): Unauthorized
+  { "error": "Unauthorized" }
+- Error (403): Unauthorized to cancel
+  { "error": "You can only cancel your own bookings" }
+- Error (404): Booking not found
+  { "error": "Booking not found" }
+- Error (500): Server error
+  { "error": "Failed to cancel booking" }
+
+Notes:
+- Promotes the oldest waitlisted booking if capacity is available after cancellation.
+- Sends notifications to both the canceled user and the promoted user.

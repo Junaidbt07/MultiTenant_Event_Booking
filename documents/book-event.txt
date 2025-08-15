@@ -1,0 +1,40 @@
+API Documentation: POST /api/book-event
+
+Description:
+Creates a new booking for a specified event. Automatically assigns a status of 'confirmed' if capacity allows, or 'waitlisted' if the event is full. Logs the action and sends a notification to the user.
+
+Request:
+- Method: POST
+- URL: /api/book-event
+- Headers: Authorization (via Payload auth headers)
+- Body:
+  {
+    "eventId": "string" // ID of the event to book
+  }
+- Required Permissions: Attendee role
+
+Response:
+- Success (200):
+  {
+    "booking": {
+      "id": "string",
+      "status": "confirmed" | "waitlisted",
+      "event": "string",
+      "user": "string",
+      "tenant": "string"
+    }
+  }
+- Error (400): Missing eventId
+  { "error": "eventId is required" }
+- Error (401): Unauthorized
+  { "error": "Unauthorized" }
+- Error (403): Non-attendee access
+  { "error": "Only attendees can book events" }
+- Error (404): Event not found in tenant
+  { "error": "Event not found in your tenant" }
+- Error (500): Server error
+  { "error": "Failed to book event" }
+
+Notes:
+- Checks event capacity against confirmed bookings within the user's tenant.
+- Automatically creates notifications and logs based on the assigned status.
