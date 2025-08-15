@@ -1,5 +1,9 @@
 # Multi-Tenant Event Booking System
 
+🚀 **Live Demo**: [https://multi-tenant-event-booking-livid.vercel.app/](https://multi-tenant-event-booking-livid.vercel.app/)
+- **Admin Panel**: [https://multi-tenant-event-booking-livid.vercel.app/admin](https://multi-tenant-event-booking-livid.vercel.app/admin/login)
+- **Dashboard**: [https://multi-tenant-event-booking-livid.vercel.app/dashboard](https://multi-tenant-event-booking-livid.vercel.app/dashboard)
+
 ## Overview
 
 This project is a multi-tenant event booking backend built with Payload CMS, designed to manage events, users, and bookings across multiple organizations (tenants) with complete data isolation. The system operates by enforcing event capacity limits, automatically managing waitlists, and promoting the oldest waitlisted booking when a spot becomes available. It generates in-app notifications for status changes and maintains a detailed log of all booking actions. Organizers can utilize a dashboard that displays upcoming events, including booking counts, circular progress indicators for capacity usage, and summary analytics.
@@ -17,16 +21,11 @@ The backend functions through Payload's access control and hooks, ensuring multi
 - **Organizer Dashboard**: Displays upcoming events, booking statistics, and summary analytics.
 - **Seed Script**: Populates sample data for two tenants with users, events, and bookings.
 
-## 
-
 ## Prerequisites
 
-- Node.js (^18.20.2 or &gt;=20.9.0)
-
+- Node.js (^18.20.2 or >=20.9.0)
 - PNPM
-
 - PostgreSQL database
-
 - Environment variables in `.env` (copy from `.env.example`):
 
   ```
@@ -39,14 +38,14 @@ The backend functions through Payload's access control and hooks, ensuring multi
 
 1. **Clone the Repository**:
 
-   ```
+   ```bash
    git clone https://github.com/your-username/MultiTenant_Event-Booking.git
    cd MultiTenant_Event-Booking
    ```
 
 2. **Install Dependencies**:
 
-   ```
+   ```bash
    npm install
    ```
 
@@ -54,13 +53,13 @@ The backend functions through Payload's access control and hooks, ensuring multi
 
 4. **Generate Types**:
 
-   ```
+   ```bash
    npm run generate:types
    ```
 
 5. **Run Development Server**:
 
-   ```
+   ```bash
    npm run dev
    ```
 
@@ -68,7 +67,7 @@ The backend functions through Payload's access control and hooks, ensuring multi
 
 6. **Seed the Database**:
 
-   ```
+   ```bash
    npm run seed
    ```
 
@@ -86,45 +85,52 @@ The project follows a modular structure using Payload CMS for the backend and Ne
     - `components/OrganizerDashboard.tsx`: React component for the dashboard UI.
     - `page.tsx`: Homepage or landing page.
     - `layout.tsx`: Layout component for the application.
+    - **api/**: Custom API endpoints
+      - `book-event/route.ts`: Book event API
+      - `cancel-booking/route.ts`: Cancel booking API
+      - `dashboard/route.ts`: Dashboard data API
+      - `my-bookings/route.ts`: User bookings API
+      - `my-notifications/route.ts`: User notifications API
+      - `notifications/[id]/read/route.ts`: Mark notification as read API
   - **hooks/**:
-    - `booking.ts`: Custom hooks for booking logic.
+    - `booking.ts`: Custom hooks for booking logic including capacity checks and waitlist promotion.
     - `tenants.ts`: Custom hooks for tenant-related logic.
   - **collections/**:
-    - `Bookings.ts`: Defines the bookings collection.
-    - `BookingLogs.ts`: Defines the booking logs collection.
-    - `Events.ts`: Defines the events collection.
-    - `Notifications.ts`: Defines the notifications collection.
-    - `Users.ts`: Defines the users collection.
-    - `Tenants.ts`: Defines the tenants collection.
+    - `Bookings.ts`: Defines the bookings collection with access control and hooks.
+    - `BookingLogs.ts`: Defines the booking logs collection for audit trails.
+    - `Events.ts`: Defines the events collection with organizer relationships.
+    - `Notifications.ts`: Defines the notifications collection with user targeting.
+    - `Users.ts`: Defines the users collection with role-based access.
+    - `Tenants.ts`: Defines the tenants collection for multi-tenancy.
+  - **access/**:
+    - `index.ts`: Reusable access control functions for multi-tenant security.
   - `payload.config.ts`: Main Payload configuration with collections and plugins.
   - `payload-types.ts`: Generated TypeScript types for Payload collections.
-  - **access/**:
-    - `index.ts`: Reusable access control functions.
 - **scripts/**:
-  - `seed.ts`: Seed script for sample data.
-- **documents/**:
-  - Contains Google Docs file for API documentation submission.
+  - `seed.ts`: Seed script for sample data across multiple tenants.
 
 ### Key Logic
 
-- **Multi-Tenancy**: Every record links to a tenant. Access control hooks (`tenantFilter`) ensure users only access their tenant's data.
-- **Booking Hooks**: `beforeValidateHook` assigns status based on capacity; `afterChangeHook` handles notifications, logs, and promotions.
-- **Access Control**: Role-based functions (`isAdmin`, `isOrganizer`, `isTenantUser`) enforce permissions.
+- **Multi-Tenancy**: Every record links to a tenant. Access control hooks ensure users only access their tenant's data.
+- **Booking Hooks**: 
+  - `checkEventCapacity`: Assigns booking status (confirmed/waitlisted) based on event capacity
+  - `handleBookingStatusChange`: Manages notifications, logs, and waitlist promotions
+- **Access Control**: Role-based functions (`isAdmin`, `isOrganizerOrAdmin`, `canAccessOwnNotifications`) enforce permissions.
 - **Dashboard**: Fetches aggregated data via `GET /api/dashboard`, rendered with circular progress and stat cards.
-- **Plugins**: Uses Payload's built-in plugins like `@payloadcms/richtext-lexical` for rich text and `@payloadcms/db-postgres` for the database.
-
-No external plugins beyond Payload's ecosystem are used, ensuring high customizability.
+- **Waitlist Management**: Automatic promotion of oldest waitlisted user when confirmed booking is canceled.
 
 ### API Endpoints
 
-The system provides the following custom API endpoint, integrated with Payload's RESTful architecture and authenticated via Payload's built-in auth system:
+The system provides the following custom API endpoints:
 
-- **GET** `/api/dashboard`\
-  Retrieves aggregated data for the organizer dashboard (upcoming events, booking stats).
+- **POST** `/api/book-event` - Book an event (creates confirmed or waitlisted booking)
+- **POST** `/api/cancel-booking` - Cancel a booking (promotes from waitlist if applicable)
+- **GET** `/api/my-bookings` - Get user's bookings
+- **GET** `/api/my-notifications` - Get user's notifications
+- **POST** `/api/notifications/:id/read` - Mark notification as read
+- **GET** `/api/dashboard` - Get organizer dashboard data (events, stats, analytics)
 
-  - Requires: Authenticated organizer role.
-
-All endpoint enforces multi-tenancy and role-based access control, ensuring data isolation and security.
+All endpoints enforce multi-tenancy and role-based access control.
 
 ## Sample Workflows
 
@@ -138,8 +144,8 @@ All endpoint enforces multi-tenancy and role-based access control, ensuring data
 ### Canceling a Booking
 
 1. Log in as an organizer or admin via the admin panel.
-2. Update a confirmed booking’s status to `canceled` in the `Bookings` collection.
-3. The system promotes the oldest waitlisted booking, sends a notification, and creates a log.
+2. Update a confirmed booking's status to `canceled` in the `Bookings` collection.
+3. The system automatically promotes the oldest waitlisted booking, sends a notification, and creates a log.
 
 ### Viewing Dashboard
 
@@ -149,7 +155,8 @@ All endpoint enforces multi-tenancy and role-based access control, ensuring data
 ### Notifications
 
 1. Log in as a user and view notifications in the `Notifications` collection via the admin panel.
-2. Mark notifications as read manually or through UI updates.
+2. Notifications are automatically generated for all booking status changes.
+3. Use the API endpoint `POST /api/notifications/:id/read` to mark notifications as read.
 
 ## Demo Credentials
 
@@ -173,15 +180,38 @@ After running `npm run seed`, use these credentials to log in via `/admin`:
   - Maria Garcia: `maria.garcia@eventmax.com`, Password: `password123`
   - Robert Taylor: `robert.taylor@eventmax.com`, Password: `password123`
 
-For reviewer access, use admin credentials above.
+## Live Demo Access
+
+🌐 **Try it live**: [https://multi-tenant-event-booking-livid.vercel.app/admin](https://multi-tenant-event-booking-livid.vercel.app/admin)
+
+Use any of the demo credentials above to explore the system. The live demo includes:
+- Pre-seeded data for both tenants
+- Working booking system with waitlist management
+- Real-time notifications
+- Organizer dashboard with analytics
+- Full multi-tenant isolation
 
 ## Deployment Guide
 
-This project is Vercel-ready as it uses Next.js with Payload embedded.
+This project is deployed on Vercel and is production-ready.
 
-1. Push to GitHub (private repo).
-2. Create a Vercel account and import the repo.
-3. Set environment variables in Vercel (from `.env`): `PAYLOAD_SECRET`, `DATABASE_URI`, `NEXT_PUBLIC_SERVER_URL`.
-4. Connect to a PostgreSQL provider (e.g., Vercel Postgres or neon).
-5. Deploy: Vercel handles build and deployment automatically.
-6. Access the live site; admin at `/admin`, dashboard at `/dashboard`.
+### Deploy Your Own:
+
+1. **Fork this repository** to your GitHub account
+2. **Create a Vercel account** and import the repository
+3. **Set up environment variables** in Vercel dashboard:
+   ```
+   PAYLOAD_SECRET=your-secret-key-here
+   DATABASE_URI=your-postgresql-connection-string
+   ```
+4. **Connect to a PostgreSQL provider** (Neon, Vercel Postgres, or Supabase)
+5. **Deploy**: Vercel handles build and deployment automatically
+6. **Run the seed script** (optional) to populate sample data
+
+### Environment Setup:
+- Uses PostgreSQL with `@payloadcms/db-postgres`
+- Deployed on Vercel with Next.js runtime
+- Environment variables managed through Vercel dashboard
+- Automatic builds on git push
+
+The live demo runs on Vercel's free tier and demonstrates full production capabilities including database persistence, real-time updates, and secure multi-tenant access control.
