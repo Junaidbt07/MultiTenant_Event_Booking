@@ -40,8 +40,8 @@ The backend functions through Payload's access control and hooks, ensuring multi
 1. **Clone the Repository**:
 
    ```
-   git clone https://github.com/your-username/weframetech-event-booking.git
-   cd weframetech-event-booking
+   git clone https://github.com/your-username/MultiTenant_Event-Booking.git
+   cd MultiTenant_Event-Booking
    ```
 
 2. **Install Dependencies**:
