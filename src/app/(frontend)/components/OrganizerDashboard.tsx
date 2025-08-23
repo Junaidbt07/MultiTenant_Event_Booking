@@ -1,7 +1,7 @@
 // src/components/OrganizerDashboard.tsx
 'use client'
 import React, { useState, useEffect } from 'react';
-import { Calendar, Users, Clock, TrendingUp, BarChart3, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { Calendar, Users, Clock, TrendingUp, BarChart3, CheckCircle, AlertCircle, XCircle, Activity } from 'lucide-react';
 import Link from 'next/link';
 
 interface Event {
@@ -22,9 +22,35 @@ interface SummaryAnalytics {
   totalCanceledBookings: number;
 }
 
+interface ActivityLog {
+  id: string;
+  action: string;
+  createdAt: string;
+  booking: {
+    id: string;
+    status: string | null;
+    user: {
+      name: string;
+      email: string;
+    } | null;
+  } | null;
+  event: {
+    id: string;
+    title: string;
+    date: string;
+  } | null;
+  note: string | null;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+}
+
 interface DashboardData {
   upcomingEvents: Event[];
   summaryAnalytics: SummaryAnalytics;
+  recentActivity: ActivityLog[];
 }
 
 const OrganizerDashboard = () => {
@@ -193,6 +219,98 @@ const OrganizerDashboard = () => {
     );
   };
 
+  const ActivityFeedItem = ({ activity }: { activity: ActivityLog }) => {
+    const activityDate = new Date(activity.createdAt);
+    const formattedDate = activityDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+    const formattedTime = activityDate.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const getActionColor = (action: string) => {
+      switch (action) {
+        case 'create_request':
+          return 'text-blue-600 bg-blue-50';
+        case 'auto_confirm':
+          return 'text-green-600 bg-green-50';
+        case 'auto_waitlist':
+          return 'text-yellow-600 bg-yellow-50';
+        case 'promote_from_waitlist':
+          return 'text-green-600 bg-green-50';
+        case 'cancel_confirmed':
+          return 'text-red-600 bg-red-50';
+        default:
+          return 'text-gray-600 bg-gray-50';
+      }
+    };
+
+    const getActionIcon = (action: string) => {
+      switch (action) {
+        case 'create_request':
+          return Activity;
+        case 'auto_confirm':
+        case 'promote_from_waitlist':
+          return CheckCircle;
+        case 'auto_waitlist':
+          return Clock;
+        case 'cancel_confirmed':
+          return XCircle;
+        default:
+          return Activity;
+      }
+    };
+
+    const ActionIcon = getActionIcon(activity.action);
+    const colorClasses = getActionColor(activity.action);
+
+    const getActionDescription = (activity: ActivityLog) => {
+      const userName = activity.booking?.user?.name || 'Unknown user';
+      const eventTitle = activity.event?.title || 'Unknown event';
+      
+      switch (activity.action) {
+        case 'create_request':
+          return `${userName} requested booking for "${eventTitle}"`;
+        case 'auto_confirm':
+          return `${userName} was automatically confirmed for "${eventTitle}"`;
+        case 'auto_waitlist':
+          return `${userName} was added to waitlist for "${eventTitle}"`;
+        case 'promote_from_waitlist':
+          return `${userName} was promoted from waitlist for "${eventTitle}"`;
+        case 'cancel_confirmed':
+          return `${userName} canceled confirmed booking for "${eventTitle}"`;
+        default:
+          return `${activity.action.replace('_', ' ')} - ${userName} - "${eventTitle}"`;
+      }
+    };
+
+    return (
+      <div className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg">
+        <div className={`p-2 rounded-full ${colorClasses}`}>
+          <ActionIcon size={16} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-gray-900">
+            {getActionDescription(activity)}
+          </p>
+          {activity.note && (
+            <p className="text-xs text-gray-600 mt-1">{activity.note}</p>
+          )}
+          <p className="text-xs text-gray-500 mt-1">
+            {formattedDate} at {formattedTime}
+            {activity.user && (
+              <span className="ml-2">
+                by {activity.user.name}
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -235,7 +353,7 @@ const OrganizerDashboard = () => {
     );
   }
 
-  const { upcomingEvents, summaryAnalytics } = dashboardData;
+  const { upcomingEvents, summaryAnalytics, recentActivity } = dashboardData;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -274,32 +392,68 @@ const OrganizerDashboard = () => {
           />
         </div>
 
-        {/* Upcoming Events */}
-        <div className="mb-8">
-          <div className="flex items-center mb-6">
-            <TrendingUp className="text-blue-600 mr-3" size={24} />
-            <h2 className="text-2xl font-bold text-gray-900">Upcoming Events</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* Upcoming Events */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center mb-6">
+              <TrendingUp className="text-blue-600 mr-3" size={24} />
+              <h2 className="text-2xl font-bold text-gray-900">Upcoming Events</h2>
+            </div>
+
+            {upcomingEvents.length === 0 ? (
+              <div className="bg-white rounded-lg border border-gray-200 p-8 text-center shadow-sm">
+                <Calendar className="mx-auto text-gray-400 mb-4" size={48} />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Upcoming Events</h3>
+                <p className="text-gray-600 mb-4">You haven&apos;t created any upcoming events yet.</p>
+                <button
+                  onClick={() => window.location.href = '/admin/collections/events/create'}
+                  className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Create Your First Event
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {upcomingEvents.slice(0, 3).map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+                {upcomingEvents.length > 3 && (
+                  <div className="text-center">
+                    <Link
+                      href="/admin/collections/events"
+                      className="text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      View all {upcomingEvents.length} events
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {upcomingEvents.length === 0 ? (
-            <div className="bg-white rounded-lg border border-gray-200 p-8 text-center shadow-sm">
-              <Calendar className="mx-auto text-gray-400 mb-4" size={48} />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Upcoming Events</h3>
-              <p className="text-gray-600 mb-4">You haven&apos;t created any upcoming events yet.</p>
-              <button
-                onClick={() => window.location.href = '/admin/collections/events/create'}
-                className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Create Your First Event
-              </button>
+          {/* Recent Activity Feed */}
+          <div className="lg:col-span-1">
+            <div className="flex items-center mb-6">
+              <Activity className="text-purple-600 mr-3" size={24} />
+              <h2 className="text-2xl font-bold text-gray-900">Recent Activity</h2>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {upcomingEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
+
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+              {recentActivity.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Activity className="mx-auto text-gray-400 mb-4" size={48} />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Recent Activity</h3>
+                  <p className="text-gray-600">Activity will appear here as people interact with your events.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {recentActivity.map((activity) => (
+                    <ActivityFeedItem key={activity.id} activity={activity} />
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Quick Actions */}

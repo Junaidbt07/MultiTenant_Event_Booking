@@ -6,10 +6,9 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
   try {
     const payload = await getPayload({ config })
-    
-    // Get user from headers (same way as in your page.tsx)
+   
     const { user } = await payload.auth({ headers: request.headers })
-    
+   
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -51,7 +50,7 @@ export async function GET(request: NextRequest) {
         })
 
         const bookings = bookingsResult.docs
-        
+       
         const confirmedCount = bookings.filter(b => b.status === 'confirmed').length
         const waitlistedCount = bookings.filter(b => b.status === 'waitlisted').length
         const canceledCount = bookings.filter(b => b.status === 'canceled').length
@@ -70,13 +69,51 @@ export async function GET(request: NextRequest) {
       })
     )
 
+    const recentActivityResult = await payload.find({
+      collection: 'booking-logs',
+      where: {
+        and: [
+          { tenant: { equals: tenantId } },
+          { action: { not_equals: 'create_request' } }
+        ]
+      },
+      limit: 5,
+      sort: '-createdAt',
+      depth: 2
+    })
+
+    const recentActivity = recentActivityResult.docs.map(log => ({
+      id: log.id,
+      action: log.action,
+      createdAt: log.createdAt,
+      booking: typeof log.booking === 'object' ? {
+        id: log.booking.id,
+        status: log.booking.status,
+        user: typeof log.booking.user === 'object' ? {
+          name: log.booking.user.name,
+          email: log.booking.user.email
+        } : null
+      } : null,
+      event: typeof log.event === 'object' ? {
+        id: log.event.id,
+        title: log.event.title,
+        date: log.event.date
+      } : null,
+      note: log.note,
+      user: typeof log.user === 'object' ? {
+        id: log.user.id,
+        name: log.user.name,
+        email: log.user.email
+      } : null
+    }))
+
     // Calculate summary analytics
     const totalEvents = events.length
     const totalConfirmedBookings = eventDetails.reduce((sum, event) => sum + event.confirmedCount, 0)
     const totalWaitlistedBookings = eventDetails.reduce((sum, event) => sum + event.waitlistedCount, 0)
     const totalCanceledBookings = eventDetails.reduce((sum, event) => sum + event.canceledCount, 0)
 
-    // Filter for upcoming events (future dates)
+    // Filter for upcoming events
     const now = new Date()
     const upcomingEvents = eventDetails.filter(event => new Date(event.date) > now)
 
@@ -87,11 +124,11 @@ export async function GET(request: NextRequest) {
         totalConfirmedBookings,
         totalWaitlistedBookings,
         totalCanceledBookings
-      }
+      },
+      recentActivity
     }
 
     return NextResponse.json(dashboardData)
-
   } catch (error) {
     console.error('Dashboard API Error:', error)
     return NextResponse.json(
