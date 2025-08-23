@@ -2,7 +2,7 @@ import { headers as getHeaders } from 'next/headers.js'
 import { getPayload } from 'payload'
 import React from 'react'
 import config from '@/payload.config'
-import OrganizerDashboard from '../components/OrganizerDashboard'
+import OrganizerDashboard from '../../components/OrganizerDashboard'
 import Link from 'next/link'
 
 export default async function DashboardPage() {

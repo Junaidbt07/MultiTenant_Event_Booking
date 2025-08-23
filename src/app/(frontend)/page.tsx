@@ -49,7 +49,7 @@ export default async function HomePage() {
           {user?.role === 'organizer' && (
             <a
               className="dashboard"
-              href="/dashboard"
+              href="/organizer/dashboard"
               rel="noopener noreferrer"
             >
               Organizer Dashboard
