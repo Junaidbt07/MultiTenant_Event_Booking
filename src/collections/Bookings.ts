@@ -25,7 +25,7 @@ export const Bookings: CollectionConfig = {
       };
     },
     create: ({ req: { user } }) => {
-      return !!user && user.role === 'attendee';
+      return !!user && user.role === 'attendee';  
     },
     update: ({ req: { user } }) => {
       if (!user) return false;
@@ -33,13 +33,13 @@ export const Bookings: CollectionConfig = {
       const tenantId = typeof user.tenant === 'object' ? user.tenant.id : user.tenant;
       
       if (user.role === 'admin' || user.role === 'organizer') {
-        return { tenant: { equals: tenantId } } as any;
+        return { tenant: { equals: tenantId }, status: { not_equals: 'waitlisted' } } as any;
       }
       
-      // Attendees can only cancel their own bookings
       return {
         user: { equals: user.id },
-        tenant: { equals: tenantId }
+        tenant: { equals: tenantId },
+        status: { not_equals: 'waitlisted' }
       };
     },
     delete: ({ req: { user } }) => {
@@ -55,46 +55,46 @@ export const Bookings: CollectionConfig = {
     beforeValidate: [populateTenant],
     beforeChange: [checkEventCapacity],
     afterChange: [handleBookingStatusChange],
-    afterUpdate: [
-      async ({ req, doc, previousDoc }: any) => {
-        const { payload } = req;
+    // afterUpdate: [
+    //   async ({ req, doc, previousDoc }: any) => {
+    //     const { payload } = req;
         
-        // Only promote if a confirmed booking was canceled
-        if (doc.status === 'canceled' && previousDoc?.status === 'confirmed') {
-          const tenantId = typeof doc.tenant === 'object' ? doc.tenant.id : doc.tenant;
+    //     // Only promote if a confirmed booking was canceled
+    //     if (doc.status === 'canceled' && previousDoc?.status === 'confirmed') {
+    //       const tenantId = typeof doc.tenant === 'object' ? doc.tenant.id : doc.tenant;
           
-          try {
-            const waitlistedBookings = await payload.find({
-              collection: 'bookings',
-              where: {
-                and: [
-                  { event: { equals: doc.event } },
-                  { status: { equals: 'waitlisted' } },
-                  { tenant: { equals: tenantId } },
-                ],
-              },
-              sort: 'createdAt', // Oldest first
-              limit: 1,
-            });
+    //       try {
+    //         const waitlistedBookings = await payload.find({
+    //           collection: 'bookings',
+    //           where: {
+    //             and: [
+    //               { event: { equals: doc.event } },
+    //               { status: { equals: 'waitlisted' } },
+    //               { tenant: { equals: tenantId } },
+    //             ],
+    //           },
+    //           sort: 'createdAt', // Oldest first
+    //           limit: 1,
+    //         });
             
-            if (waitlistedBookings.docs.length > 0) {
-              const oldest = waitlistedBookings.docs[0];
+    //         if (waitlistedBookings.docs.length > 0) {
+    //           const oldest = waitlistedBookings.docs[0];
               
-              await payload.update({
-                collection: 'bookings',
-                id: oldest.id,
-                data: { status: 'confirmed' },
-                context: { isPromotion: true },
-              });
+    //           await payload.update({
+    //             collection: 'bookings',
+    //             id: oldest.id,
+    //             data: { status: 'confirmed' },
+    //             context: { isPromotion: true },
+    //           });
               
-              payload.logger.info(`Promoted booking ${oldest.id} from waitlist`);
-            }
-          } catch (error) {
-            payload.logger.error(`Error promoting from waitlist: ${error}`);
-          }
-        }
-      },
-    ],
+    //           payload.logger.info(`Promoted booking ${oldest.id} from waitlist`);
+    //         }
+    //       } catch (error) {
+    //         payload.logger.error(`Error promoting from waitlist: ${error}`);
+    //       }
+    //     }
+    //   },
+    // ],
   } as any,
   fields: [
     {
