@@ -9,7 +9,7 @@ Request:
 - Headers: Authorization (via Payload auth headers)
 - Body:
   {
-    "eventId": "string" // ID of the event to book
+    "eventId": number // ID of the event to book
   }
 - Required Permissions: Attendee role
 
@@ -17,7 +17,7 @@ Response:
 - Success (200):
   {
     "booking": {
-      "id": "string",
+      "id": number,
       "status": "confirmed" | "waitlisted",
       "event": "string",
       "user": "string",
